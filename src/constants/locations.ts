@@ -1,5 +1,5 @@
 // This file is auto-generated. Do not edit manually.
-// Generated on: 2025-05-21T05:26:21.270Z
+// Generated on: 2025-05-21T07:03:39.536Z
 
 export interface Location {
   locationId: string;

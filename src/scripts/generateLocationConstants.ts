@@ -27,7 +27,7 @@ export const LOCATIONS: Location[] = ${JSON.stringify(locationData, null, 2)};
 `;
 
     // Ensure the constants directory exists
-    const constantsDir = path.join(__dirname, '../src/constants');
+    const constantsDir = path.join(__dirname, '../constants');
     if (!fs.existsSync(constantsDir)) {
       fs.mkdirSync(constantsDir, { recursive: true });
     }
