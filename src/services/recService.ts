@@ -1,7 +1,7 @@
-import { getRecLocation, RecLocationResponse, getRecSchedule, RecScheduleResponse } from '../api/rec';
+import { getRecLocation, RecLocationResponse } from '../api/rec';
 import { LOCATIONS } from '../constants/locations';
 import { getTimeslotsByLocation, markTimeslotAsUnavailable, createNewTimeslot } from '../services/timeslotService';
-import { ITimeslot } from '../db/models/timeslot';
+import type { Timeslot } from '@prisma/client';
 
 /**
  * Extracts all location IDs from the banner pages data in a location response
@@ -196,7 +196,7 @@ export async function syncTimeslots(locationId: string): Promise<void> {
   
   const existingTimeslots = await getTimeslotsByLocation(locationId);
   const existingTimeslotMap = new Map(
-    existingTimeslots.map((timeslot: ITimeslot) => [
+    existingTimeslots.map((timeslot: Timeslot) => [
       `${timeslot.date}-${timeslot.startTime}-${timeslot.endTime}`,
       timeslot
     ])
@@ -210,7 +210,7 @@ export async function syncTimeslots(locationId: string): Promise<void> {
   
   for (const [key, timeslot] of existingTimeslotMap) {
     if (!availableTimeslotMap.has(key)) {
-      await markTimeslotAsUnavailable(timeslot._id.toString());
+      await markTimeslotAsUnavailable(timeslot.id);
     }
   }
   

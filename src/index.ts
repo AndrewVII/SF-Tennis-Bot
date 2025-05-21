@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits } from 'discord.js';
 import cron from 'node-cron';
 import dotenv from 'dotenv';
-import { connectToDatabase, disconnectFromDatabase } from './db/connection';
+import { connectToDatabase, disconnectFromDatabase } from './db/prisma';
 import './crons';  // Import the crons file to start the cron jobs
 
 dotenv.config();

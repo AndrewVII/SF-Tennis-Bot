@@ -1,17 +1,15 @@
-import Timeslot, { ITimeslot } from '../db/models/timeslot';
-
-
+import prisma from '../db/prisma';
+import type { Timeslot } from '@prisma/client';
 /**
  * Marks a timeslot as unavailable in the database
  * @param timeslotId The ID of the timeslot to mark as unavailable
  * @returns Promise resolving to the updated timeslot document
  */
-export async function markTimeslotAsUnavailable(timeslotId: string): Promise<ITimeslot | null> {
-  return Timeslot.findByIdAndUpdate(
-    timeslotId,
-    { available: false },
-    { new: true }
-  );
+export async function markTimeslotAsUnavailable(timeslotId: number): Promise<Timeslot | null> {
+  return prisma.timeslot.update({
+    where: { id: timeslotId },
+    data: { available: false, unavailableAt: new Date() }
+  });
 }
 
 /**
@@ -25,15 +23,14 @@ export async function createNewTimeslot(timeslotData: {
   date: string;
   locationId: string;
   locationName: string;
-}): Promise<ITimeslot> {
-  const timeslot = new Timeslot({
-    _id: `${timeslotData.locationId}-${timeslotData.date}-${timeslotData.startTime}-${timeslotData.endTime}`,
-    ...timeslotData,
-    available: true,
-    messages: []
+}): Promise<Timeslot> {
+  return prisma.timeslot.create({
+    data: {
+      ...timeslotData,
+      available: true,
+      availableAt: new Date()
+    }
   });
-  
-  return timeslot.save();
 }
 
 /**
@@ -41,6 +38,8 @@ export async function createNewTimeslot(timeslotData: {
  * @param locationId The ID of the location to get timeslots for
  * @returns Promise resolving to an array of timeslot documents
  */
-export async function getTimeslotsByLocation(locationId: string): Promise<ITimeslot[]> {
-  return Timeslot.find({ locationId });
+export async function getTimeslotsByLocation(locationId: string): Promise<Timeslot[]> {
+  return prisma.timeslot.findMany({
+    where: { locationId }
+  });
 } 
