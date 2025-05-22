@@ -35,12 +35,13 @@ export const sendNewTimeslotMessage = async ({locationId, locationName, startTim
   }
 
   const formattedStartTime = convertTo12Hour(startTime);
+  const formattedEndTime = convertTo12Hour(endTime);
   const formattedDate = formatDate(date);
 
   const embed = new EmbedBuilder()
     .setColor('#00ff00')
     .setTitle(`🎾 New opening at ${locationName}`)
-    .setDescription('If you can see this message, the court is still available for booking!')
+    .setDescription(`For ${formattedDate}, ${formattedStartTime} - ${formattedEndTime}`)
     .addFields(
       { name: '📅 Date', value: formattedDate, inline: true },
       { name: '⏰ Start Time', value: formattedStartTime, inline: true },
