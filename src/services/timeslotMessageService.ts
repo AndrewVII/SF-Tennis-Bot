@@ -19,6 +19,7 @@ export async function createNewTimeslot(timeslotData: {
 }): Promise<TimeslotMessage> {
   const messageId = await sendNewTimeslotMessage({
     locationId: timeslotData.locationId,
+    locationName: timeslotData.locationName,
     startTime: timeslotData.startTime,
     endTime: timeslotData.endTime,
     date: timeslotData.date

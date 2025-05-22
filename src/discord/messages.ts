@@ -4,6 +4,7 @@ import { TextChannel, EmbedBuilder } from 'discord.js';
 
 type timeslotMessageArgs = {
   locationId: string;
+  locationName: string;
   startTime: string;
   endTime: string;
   date: string;
@@ -17,7 +18,12 @@ const convertTo12Hour = (time24: string): string => {
   return `${hour12}:${minutes} ${ampm}`;
 }
 
-export const sendNewTimeslotMessage = async ({locationId, startTime, endTime, date}: timeslotMessageArgs) => {
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+export const sendNewTimeslotMessage = async ({locationId, locationName, startTime, endTime, date}: timeslotMessageArgs) => {
   const channelId = await getLocationChannelId(locationId);
   if (!channelId) {
     throw new Error(`Location with ID ${locationId} not found`);
@@ -29,13 +35,14 @@ export const sendNewTimeslotMessage = async ({locationId, startTime, endTime, da
   }
 
   const formattedStartTime = convertTo12Hour(startTime);
+  const formattedDate = formatDate(date);
 
   const embed = new EmbedBuilder()
     .setColor('#00ff00')
-    .setTitle('🎾 New Court Timeslot Available!')
+    .setTitle(`🎾 New opening at ${locationName}`)
     .setDescription('If you can see this message, the court is still available for booking!')
     .addFields(
-      { name: '📅 Date', value: date, inline: true },
+      { name: '📅 Date', value: formattedDate, inline: true },
       { name: '⏰ Start Time', value: formattedStartTime, inline: true },
       { name: '🔗 Book Here', value: `[Click to book on rec.us](https://www.rec.us/locations/${locationId})`, inline: true }
     )
@@ -48,7 +55,7 @@ export const sendNewTimeslotMessage = async ({locationId, startTime, endTime, da
 
 export const updateTimeslotMessageToUnavailable = async (
   messageId: string, 
-  channelId: string, 
+  channelId: string,
   availableAt: Date, 
   unavailableAt: Date,
   date: string,
@@ -66,16 +73,17 @@ export const updateTimeslotMessageToUnavailable = async (
 
   const duration = Math.round((unavailableAt.getTime() - availableAt.getTime()) / (1000 * 60)); // Duration in minutes
   const formattedStartTime = convertTo12Hour(startTime);
+  const formattedDate = formatDate(date);
 
   const embed = new EmbedBuilder()
     .setColor('#ff0000')
     .setTitle('❌ Court Timeslot No Longer Available')
     .setDescription('This court has been booked by someone else.')
     .addFields(
-      { name: '📅 Date', value: date, inline: true },
+      { name: '📅 Date', value: formattedDate, inline: true },
       { name: '⏰ Start Time', value: formattedStartTime, inline: true },
       { name: '⏱️ Duration Available', value: `${duration} minutes`, inline: true },
-      { name: '📅 Booked At', value: unavailableAt.toLocaleString(), inline: true }
+      { name: '📅 Booked At', value: unavailableAt.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }), inline: true }
     )
     .setFooter({ text: 'Keep checking for new timeslots!' })
     .setTimestamp();
