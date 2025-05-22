@@ -3,10 +3,10 @@ import { syncAllTimeslots } from './services/recService';
 import { redisClient } from './db/redis';
 
 const LOCK_KEY = 'sync_timeslots_lock';
-const LOCK_TTL = 3600; // 1 hour in seconds
+const LOCK_TTL = 600; // 10 minutes in seconds
 
-// Schedule the cron job to run every 5 seconds
-cron.schedule('*/5 * * * * *', async () => {
+// Schedule the cron job to run every 15 seconds
+cron.schedule('*/15 * * * * *', async () => {
   // Try to acquire the lock atomically
   const acquired = await redisClient.set(LOCK_KEY, '1', {
     EX: LOCK_TTL,
