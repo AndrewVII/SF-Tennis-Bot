@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import express, { Request, Response } from 'express';
 import { connectToDatabase, disconnectFromDatabase } from './db/prisma';
 import { connectToRedis, disconnectFromRedis } from './db/redis';
 import { Bot } from './discord/bot';
@@ -6,6 +7,9 @@ import './crons';  // Import the crons file to start the cron jobs
 import './queues/messageQueue';  // Import to start the message queue worker
 
 dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
 
 async function main() {
     try {
@@ -17,6 +21,15 @@ async function main() {
         
         // Start Discord bot
         await Bot.initialize();
+        
+        // Start Express server
+        app.get('/', (req: Request, res: Response) => {
+            res.send('SF Tennis Bot is running!');
+        });
+        
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`);
+        });
         
         // Handle graceful shutdown
         process.on('SIGINT', async () => {
