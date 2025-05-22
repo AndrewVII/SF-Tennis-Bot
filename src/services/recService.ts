@@ -1,7 +1,7 @@
 import { getRecLocation, RecLocationResponse } from '../api/rec';
 import { LOCATIONS } from '../constants/locations';
-import { getTimeslotsByLocation, markTimeslotAsUnavailable, createNewTimeslot } from '../services/timeslotService';
-import type { Timeslot } from '@prisma/client';
+import { createNewTimeslot, findTimeslotByProperties, updateTimeslotSecretKey, markTimeslotsWithIncorrectSecretKeyAsUnavailable } from './timeslotMessageService';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Extracts all location IDs from the banner pages data in a location response
@@ -27,11 +27,9 @@ export function getAllLocations(locationData: RecLocationResponse): string[] {
  * @returns Promise resolving to an array of location data for all locations
  */
 export async function getAllLocationsData(initialLocationId: string): Promise<RecLocationResponse[]> {
-  // First get the initial location data to extract all location IDs
   const initialLocationData = await getRecLocation(initialLocationId);
   const allLocationIds = getAllLocations(initialLocationData);
-  
-  // Then fetch data for each location
+
   const allLocationsData = await Promise.all(
     allLocationIds.map(locationId => getRecLocation(locationId))
   );
@@ -193,38 +191,33 @@ export async function syncTimeslots(locationId: string): Promise<void> {
   if (!location) {
     throw new Error(`Location with ID ${locationId} not found`);
   }
+
+  const secretKey = uuidv4();
   
-  const existingTimeslots = await getTimeslotsByLocation(locationId);
-  const existingTimeslotMap = new Map(
-    existingTimeslots.map((timeslot: Timeslot) => [
-      `${timeslot.date}-${timeslot.startTime}-${timeslot.endTime}`,
-      timeslot
-    ])
-  );
-  const availableTimeslotMap = new Map(
-    availableTimeslots.map(timeslot => [
-      `${timeslot.day}-${timeslot.startTime}-${timeslot.endTime}`,
-      timeslot
-    ])
-  );
-  
-  for (const [key, timeslot] of existingTimeslotMap) {
-    if (!availableTimeslotMap.has(key)) {
-      await markTimeslotAsUnavailable(timeslot.id);
-    }
-  }
-  
-  for (const [key, timeslot] of availableTimeslotMap) {
-    if (!existingTimeslotMap.has(key)) {
+  for (const timeslot of availableTimeslots) {
+    const existingTimeslot = await findTimeslotByProperties({
+      startTime: timeslot.startTime,
+      endTime: timeslot.endTime,
+      date: timeslot.day,
+      locationId
+    });
+
+    if (existingTimeslot) {
+      await updateTimeslotSecretKey(existingTimeslot.id, secretKey);
+    } else {
       await createNewTimeslot({
         startTime: timeslot.startTime,
         endTime: timeslot.endTime,
         date: timeslot.day,
         locationId,
-        locationName: location.name
+        locationName: location.name,
+        secretKey
       });
     }
   }
+
+  // Mark all timeslots with the wrong secretKey as unavailable
+  await markTimeslotsWithIncorrectSecretKeyAsUnavailable(secretKey, locationId);
 }
 
 /**
@@ -232,6 +225,8 @@ export async function syncTimeslots(locationId: string): Promise<void> {
  * @returns Promise resolving when all location syncs are complete
  */
 export async function syncAllTimeslots(): Promise<void> {
+  console.log('Syncing all timeslots...');
   const syncPromises = LOCATIONS.map(location => syncTimeslots(location.locationId));
   await Promise.all(syncPromises);
+  console.log('All timeslots synced successfully');
 } 
