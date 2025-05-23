@@ -3,7 +3,7 @@ import { LOCATIONS } from '../constants/locations';
 import prisma from '../db/prisma';
 import dotenv from 'dotenv';
 
-const CATEGORY_ID = '1375022476769362002';
+const CATEGORY_ID = '1375347008734236672';
 
 export async function setupLocationChannels(client: Client) {
   console.log('Starting location channel setup...');

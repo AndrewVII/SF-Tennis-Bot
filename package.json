@@ -9,7 +9,10 @@
     "dev": "ts-node src/index.ts",
     "generate-locations": "ts-node src/scripts/generateLocationConstants.ts",
     "setup-location-channels": "ts-node src/scripts/setupLocationChannels.ts",
-    "delete-all-channels": "ts-node src/scripts/deleteAllChannels.ts"
+    "delete-all-channels": "ts-node src/scripts/deleteAllChannels.ts",
+    "create-time-roles": "ts-node src/scripts/createTimeRoles.ts",
+    "delete-all-roles": "ts-node src/scripts/deleteAllRoles.ts",
+    "test-message": "ts-node src/scripts/testMessage.ts"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

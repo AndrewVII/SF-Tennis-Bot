@@ -1,6 +1,9 @@
 import { getLocationChannelId } from '../services/locationService';
 import { Bot } from './bot';
 import { TextChannel, EmbedBuilder } from 'discord.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 type timeslotMessageArgs = {
   locationId: string;
@@ -38,10 +41,19 @@ export const sendNewTimeslotMessage = async ({locationId, locationName, startTim
   const formattedEndTime = convertTo12Hour(endTime);
   const formattedDate = formatDate(date);
 
+  // Get the role from database
+  const role = await prisma.roles.findFirst({
+    where: {
+      name: formattedStartTime
+    }
+  });
+
+  const roleMention = role ? `<@&${role.id}>` : '';
+
   const embed = new EmbedBuilder()
     .setColor('#00ff00')
-    .setTitle(`🎾 New opening at ${locationName}`)
-    .setDescription(`For ${formattedDate}, ${formattedStartTime} - ${formattedEndTime}`)
+    .setTitle(`🎾 Court Available at ${locationName}`)
+    .setDescription(`${formattedDate}, ${formattedStartTime} - ${formattedEndTime}`)
     .addFields(
       { name: '📅 Date', value: formattedDate, inline: true },
       { name: '⏰ Start Time', value: formattedStartTime, inline: true },
@@ -50,7 +62,9 @@ export const sendNewTimeslotMessage = async ({locationId, locationName, startTim
     .setFooter({ text: 'Book fast!' })
     .setTimestamp();
 
-  const message = await channel.send({ embeds: [embed] });
+  const content = roleMention ? `${locationName}: ${formattedDate} ${roleMention} - ${formattedEndTime} ` : `**${locationName}**: ${formattedDate} ${formattedStartTime} - ${formattedEndTime} `;
+
+  const message = await channel.send({ content, embeds: [embed] });
   return message.id;
 }
 
